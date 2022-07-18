@@ -68,7 +68,7 @@ client.on("message", async (channel, userstate, message, self) => {
         for (const i in channels[ch]["commands"]) {
           if (message == channels[ch]["commands"][i]["command"]) {
             response = channels[ch]["commands"][i]["response"];
-            response = response.replace("%username%", userstate["username"]);
+            response = this.replaceUsername("%username%", userstate["username"]);
           }
         }
       }
@@ -108,7 +108,7 @@ module.exports.matchMessage = function (channel, message) {
     // make response
     let response = channels[channel]["extra"][e]["response"];
     // console.log(">", channel, channels[channel], channels[channel]["extra"], channels[channel]["extra"][e])
-    response = response.replace("%username%", match[index]);
+    response = this.replaceUsername("%username%", match[index]);
     response = response.replace("%emote_here%", channels[channel]["emoji"]);
     return response;
   }
@@ -174,6 +174,21 @@ function sayFormatResponse(channel, response) {
       break;
     }
   }
+}
+
+/**
+ * Replace username placeholder in response
+ * 
+ * @param {string} response 
+ * @param {string} username 
+ * @returns 
+ */
+module.exports.replaceUsername = function(response, username){
+  // if tag username is bot self, remove tag.
+  if (config.get("USERNAME") == username) {
+    return response.replace("@%username%", "");
+  }
+  return response.replace("%username%", username);
 }
 
 client.connect();
