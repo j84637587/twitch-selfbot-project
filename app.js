@@ -57,11 +57,21 @@ function sendEmoji() {
   // client.say("#aaaaalice425", "aaaaal1Heart ");
 }
 
-client.on("message", async (channel, tags, message, self) => {
+client.on("message", async (channel, userstate, message, self) => {
   // console.log(message); // this would print all message we recevice
   for (const ch in channels) {
     if (channel.substring(1) == ch) {
       let response = this.matchMessage(ch, message);
+
+      // commands
+      if (response == "") {
+        for (const i in channels[ch]["commands"]) {
+          if (message == channels[ch]["commands"][i]["command"]) {
+            response = channels[ch]["commands"][i]["response"];
+            response = response.replace("%username%", userstate["username"]);
+          }
+        }
+      }
 
       if (response != "") {
         if (channels[ch]["response"] == true) {
