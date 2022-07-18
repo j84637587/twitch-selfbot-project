@@ -108,7 +108,7 @@ module.exports.matchMessage = function (channel, message) {
     // make response
     let response = channels[channel]["extra"][e]["response"];
     // console.log(">", channel, channels[channel], channels[channel]["extra"], channels[channel]["extra"][e])
-    response = this.replaceUsername("%username%", match[index]);
+    response = this.replaceUsername(response, match[index]);
     response = response.replace("%emote_here%", channels[channel]["emoji"]);
     return response;
   }
