@@ -24,6 +24,13 @@ client.on("connected", (adress, port) => {
   console.log("\u001b[32mself-bot 啟動!\u001b[0m");
 
   // init
+  this.init();
+
+  // spam interval
+  let spamIntervalID = setInterval(sendEmoji, 3 * 61 * 1_000);
+});
+
+module.exports.init = function () {
   for (const ch in channels) {
     if (!channels[ch].hasOwnProperty("extra")) continue;
     for (const e in channels[ch]["extra"]) {
@@ -37,10 +44,7 @@ client.on("connected", (adress, port) => {
       );
     }
   }
-
-  // spam interval
-  let spamIntervalID = setInterval(sendEmoji, 3 * 61 * 1_000);
-});
+}
 
 /**
  * Send emote to certain channel
@@ -51,22 +55,12 @@ function sendEmoji() {
 }
 
 client.on("message", async (channel, tags, message, self) => {
+  console.log(message)
   for (const ch in channels) {
     if (channel.substring(1) == ch) {
-      for (const e in RegExps[ch]) {
-        // regex match
-        let match = RegExps[ch][e].exec(message);
-        if (match == null) continue;
+      let response = this.matchMessage(ch, message);
 
-        // get username
-        let index = match.length;
-        while (index-- && !match[index]);
-        if (index == -1) break;
-
-        // make response
-        let response = channels[ch]["extra"][e]["response"];
-        response = response.replace("%username%", match[index]);
-        response = response.replace("%emote_here%", channels[ch]["emoji"]);
+      if (response != "") {
         if (channels[ch]["response"] == true) {
           client.say(channel, response);
           console.log(`\u001b[32m${ch}: ${response}\u001b[0m`);
@@ -74,10 +68,60 @@ client.on("message", async (channel, tags, message, self) => {
           console.log(`\u001b[31m${ch}: ${response}\u001b[0m`);
         }
       }
+      // for (const e in RegExps[ch]) {
+      //   // regex match
+      //   let match = RegExps[ch][e].exec(message);
+      //   if (match == null) continue;
+
+      //   // get username
+      //   let index = match.length;
+      //   while (index-- && !match[index]);
+      //   if (index == -1) break;
+
+      //   // make response
+      //   let response = channels[ch]["extra"][e]["response"];
+      //   response = response.replace("%username%", match[index]);
+      //   response = response.replace("%emote_here%", channels[ch]["emoji"]);
+      //   if (channels[ch]["response"] == true) {
+      //     client.say(channel, response);
+      //     console.log(`\u001b[32m${ch}: ${response}\u001b[0m`);
+      //   } else {
+      //     console.log(`\u001b[31m${ch}: ${response}\u001b[0m`);
+      //   }
+      // }
       break;
     }
   }
 });
+
+/**
+ * Match message by channel's regex which was config with default.json
+ * and return response message.
+ * 
+ * @param {string} channel  Which channel's regex 
+ * @param {string} message  Message to match
+ * @returns 
+ */
+module.exports.matchMessage = function (channel, message) {
+  for (const e in RegExps[channel]) {
+    // regex match
+    let match = RegExps[channel][e].exec(message);
+    if (match == null) continue;
+
+    // get last valid match group
+    let index = match.length;
+    while (index-- && !match[index]);
+    if (index == -1) continue;
+
+    // make response
+    let response = channels[channel]["extra"][e]["response"];
+    console.log(">", channel, channels[channel], channels[channel]["extra"], channels[channel]["extra"][e])
+    response = response.replace("%username%", match[index]);
+    response = response.replace("%emote_here%", channels[channel]["emoji"]);
+    return response;
+  }
+  return "";
+}
 
 client.on("cheer", (channel, userstate, message) => {
   let bits_count = ~~userstate["bits"];
