@@ -21,7 +21,7 @@ const client = new tmi.Client({
 });
 
 client.on("connected", (adress, port) => {
-  console.log("\u001b[32mself-bot 啟動!\u001b[0m");
+  console.log(`\u001b[32m ${getCurrentTimeString()} self-bot 啟動!\u001b[0m`);
 
   // init
   this.init();
@@ -53,12 +53,12 @@ module.exports.init = function () {
  * Send emote to certain channel
  */
 function sendEmoji() {
-  console.log("\u001b[32mSend Emote\u001b[0m");
+  console.log(`\u001b[32m ${getCurrentTimeString()} Send Emote\u001b[0m`);
   // client.say("#aaaaalice425", "aaaaal1Heart ");
 }
 
 client.on("message", async (channel, userstate, message, self) => {
-  // console.log(message); // this would print all message we recevice
+  // console.log(`${getCurrentTimeString()} ${message}`); // this would print all message we recevice
   for (const ch in channels) {
     if (channel.substring(1) == ch) {
       let response = this.matchMessage(ch, message);
@@ -68,7 +68,7 @@ client.on("message", async (channel, userstate, message, self) => {
         for (const i in channels[ch]["commands"]) {
           if (message == channels[ch]["commands"][i]["command"]) {
             response = channels[ch]["commands"][i]["response"];
-            response = this.replaceUsername("%username%", userstate["username"]);
+            response = this.replaceUsername(response, userstate["username"]);
           }
         }
       }
@@ -76,9 +76,9 @@ client.on("message", async (channel, userstate, message, self) => {
       if (response != "") {
         if (channels[ch]["response"] == true) {
           client.say(channel, response);
-          console.log(`\u001b[32m${ch}: ${response}\u001b[0m`);
+          console.log(`\u001b[32m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
         } else {
-          console.log(`\u001b[31m${ch}: ${response}\u001b[0m`);
+          console.log(`\u001b[31m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
         }
       }
       break;
@@ -117,7 +117,7 @@ module.exports.matchMessage = function (channel, message) {
 
 client.on("cheer", (channel, userstate, message) => {
   let bits_count = ~~userstate["bits"];
-  console.log(`\u001b[33m ${userstate["display-name"]} cheer with ${bits_count} bits. \u001b[0m`); // print bits amount
+  console.log(`\u001b[33m ${getCurrentTimeString()}  ${userstate["display-name"]} cheer with ${bits_count} bits. \u001b[0m`); // print bits amount
   let response = `@${userstate["display-name"]} 感謝小奇點 %emote_here% `;
 
   // add extra message when reach specific amount of bits
@@ -167,9 +167,9 @@ function sayFormatResponse(channel, response) {
         setTimeout(function () {
           client.say(channel, response);
         }, 5 * 1_000);
-        console.log(`\u001b[32m${ch}: ${response}\u001b[0m`);
+        console.log(`\u001b[32m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
       } else {
-        console.log(`\u001b[31m${ch}: ${response}\u001b[0m`);
+        console.log(`\u001b[31m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
       }
       break;
     }
@@ -183,12 +183,17 @@ function sayFormatResponse(channel, response) {
  * @param {string} username 
  * @returns 
  */
-module.exports.replaceUsername = function(response, username){
+module.exports.replaceUsername = function (response, username) {
   // if tag username is bot self, remove tag.
   if (config.get("USERNAME") == username) {
     return response.replace("@%username%", "");
   }
   return response.replace("%username%", username);
+}
+
+function getCurrentTimeString() {
+  today = new Date().toLocaleString('zh-TW');
+  return `[ ${today} ] `;
 }
 
 client.connect();
