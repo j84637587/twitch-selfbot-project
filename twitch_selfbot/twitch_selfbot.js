@@ -1,5 +1,8 @@
 const tmi = require("tmi.js");
 const config = require("config");
+// const express = require('express')
+// const app = express()
+// const server = require('http').createServer(app);
 
 const channels = config.get("CHANNELS");
 const spam_channels = config.get("SPAM_CHANNELS");
@@ -19,6 +22,10 @@ const client = new tmi.Client({
   },
   channels: channel_ids,
 });
+
+// app.use(express.static("public"));
+// server.listen(4444); // port 4444
+
 
 client.on("connected", (adress, port) => {
   console.log(`\u001b[32m ${getCurrentTimeString()} self-bot 啟動!\u001b[0m`);
@@ -196,4 +203,4 @@ function getCurrentTimeString() {
   return `[ ${today} ] `;
 }
 
-client.connect();
+client.connect().catch(console.error);
