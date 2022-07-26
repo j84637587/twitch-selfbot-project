@@ -28,7 +28,7 @@ const client = new tmi.Client({
 
 
 client.on("connected", (adress, port) => {
-  console.log(`\u001b[32m ${getCurrentTimeString()} self-bot 啟動!\u001b[0m`);
+  console.log(`\u001b[32m${getCurrentTimeString()} self-bot 啟動!\u001b[0m`);
 
   // init
   this.init();
@@ -60,7 +60,7 @@ module.exports.init = function () {
  * Send emote to certain channel
  */
 function sendEmoji() {
-  console.log(`\u001b[32m ${getCurrentTimeString()} Send Emote\u001b[0m`);
+  console.log(`\u001b[32m${getCurrentTimeString()} Send Emote\u001b[0m`);
   // client.say("#aaaaalice425", "aaaaal1Heart ");
 }
 
@@ -68,7 +68,7 @@ client.on("message", async (channel, userstate, message, self) => {
   // console.log(`${getCurrentTimeString()} ${message}`); // this would print all message we recevice
   for (const ch in channels) {
     if (channel.substring(1) == ch) {
-      let response = this.matchMessage(ch, message);
+      let response = this.matchMessage(ch, message, userstate["username"]);
 
       // commands
       if (response == "") {
@@ -82,10 +82,12 @@ client.on("message", async (channel, userstate, message, self) => {
 
       if (response != "") {
         if (channels[ch]["response"] == true) {
-          client.say(channel, response);
-          console.log(`\u001b[32m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
+          setTimeout(function () {
+            client.say(channel, response);
+          }, 1 * 1_000);
+          console.log(`\u001b[32m${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
         } else {
-          console.log(`\u001b[31m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
+          console.log(`\u001b[31m${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
         }
       }
       break;
@@ -101,7 +103,7 @@ client.on("message", async (channel, userstate, message, self) => {
  * @param {string} message  Message to match
  * @returns 
  */
-module.exports.matchMessage = function (channel, message) {
+module.exports.matchMessage = function (channel, message, un) {
   for (const e in RegExps[channel]) {
     // regex match
     let match = RegExps[channel][e].exec(message);
@@ -115,7 +117,10 @@ module.exports.matchMessage = function (channel, message) {
     // make response
     let response = channels[channel]["extra"][e]["response"];
     // console.log(">", channel, channels[channel], channels[channel]["extra"], channels[channel]["extra"][e])
-    response = this.replaceUsername(response, match[index]);
+    if(index == 0)
+      response = this.replaceUsername(response, un);
+    else
+      response = this.replaceUsername(response, match[index]);
     response = response.replace("%emote_here%", channels[channel]["emoji"]);
     return response;
   }
@@ -124,7 +129,7 @@ module.exports.matchMessage = function (channel, message) {
 
 client.on("cheer", (channel, userstate, message) => {
   let bits_count = ~~userstate["bits"];
-  console.log(`\u001b[33m ${getCurrentTimeString()}  ${userstate["display-name"]} cheer with ${bits_count} bits. \u001b[0m`); // print bits amount
+  console.log(`\u001b[33m${getCurrentTimeString()}  ${userstate["display-name"]} cheer with ${bits_count} bits. \u001b[0m`); // print bits amount
   let response = `@${userstate["display-name"]} 感謝小奇點 %emote_here% `;
 
   // add extra message when reach specific amount of bits
@@ -174,9 +179,9 @@ function sayFormatResponse(channel, response) {
         setTimeout(function () {
           client.say(channel, response);
         }, 5 * 1_000);
-        console.log(`\u001b[32m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
+        console.log(`\u001b[32m${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
       } else {
-        console.log(`\u001b[31m ${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
+        console.log(`\u001b[31m${getCurrentTimeString()} ${ch}: ${response}\u001b[0m`);
       }
       break;
     }
@@ -192,9 +197,9 @@ function sayFormatResponse(channel, response) {
  */
 module.exports.replaceUsername = function (response, username) {
   // if tag username is bot self, remove tag.
-  if (config.get("USERNAME") == username) {
-    return response.replace("@%username%", "");
-  }
+  // if (config.get("USERNAME") == username) {
+  //   return response.replace("@%username%", "");
+  // }
   return response.replace("%username%", username);
 }
 
