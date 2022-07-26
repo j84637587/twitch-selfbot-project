@@ -95,8 +95,8 @@
           <button type="button" class="btn btn-info" data-bs-dismiss="modal">
             Cancel
           </button>
-          <form id="deleteForm" method="DELETE">
-            <input type="text" id="id" value="" hidden />
+          <form id="deleteForm" method="POST">
+            <input type="hidden" name="_method" value="DELETE">
             <button type="submit" class="btn btn-danger">Delete</button>
           </form>
         </div>
@@ -124,7 +124,7 @@
     $("#comfrimModal").on("show.bs.modal", function(event) {
       let button = $(event.relatedTarget);
       let id = button.data("id");
-      $(this).find("#deleteForm").attr("href", `/channel/${id}`);
+      $(this).find("#deleteForm").attr("action", `/channel/${id}?_method=DELETE`);
     });
   });
 </script>

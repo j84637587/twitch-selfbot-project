@@ -5,42 +5,44 @@ const Channel = require("../models/channel");
 // @desc    Get an array of all the users
 // @access  Public
 router.get("/", (req, res) => {
-  try {
-    Channel.find((err, channels, count) => {
-      if(err) throw err;
+  Channel.find()
+    .then((channels) => {
       res.render("index", {
         channels: channels,
       });
-    });
-  } catch (error) {
-    console.log(error);
-  }
+    })
+    .catch((err) => {
+      console.log(err);
+    })
 });
 
 router.get("/channel/:id/edit", (req, res) => {
   try {
     var id = req.params.chid; // channel id
-    Channel.find({_id: id}, (err, channel, count) => {
-      if(err) throw err;
+    Channel.find({ _id: id }, (err, channel, count) => {
+      if (err) throw err;
       console.log(channel)
-      // res.render("edit", {
-      //   channels: channels,
-      // });
     });
   } catch (error) {
     console.log(error);
   }
 });
 
-router.delete("/channel/:id", (req, res) => {
-  try {
-    var id = req.params.id; // channel id
-    console.log(id);
-    Channel.remove({_id: id}, (err, res) => {
-      if(err) throw err;
-    });
-  } catch (error) {
-    console.log(error);
+// @route   Delete /
+// @desc    Delete an record by record object id
+// @access  Public
+router.delete("/channel/:_id", (req, res) => {
+  const _id = req.params._id; // channel id
+  const deleted = Channel.findById(_id);
+  if (deleted) {
+    Channel.deleteOne({ _id })
+      .then(() => {
+        res.redirect("/");
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(404).json({ message: "Channel is not exist!" });
+      })
   }
 });
 

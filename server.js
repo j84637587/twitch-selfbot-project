@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require('mongoose');
+const methodOverride = require('method-override')
 require('dotenv').config();
 require('./twitch_selfbot/twitch_selfbot');
 const Channel = require('./models/channel');
@@ -9,16 +10,15 @@ app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 app.use(express.static('dist'));
 app.use(express.json());
+app.use(methodOverride('_method'));
 
 // process.env.DATABASE_LINK
 mongoose.connect(process.env.DATABASE_LINK)
-    .then(() => console.log("MongoDB Connected..."))
+    .then(() => console.log("*** MongoDB Is Connected..."))
     .catch((err) => console.log(err));
 
 // API Use Routes
 app.use("/", require('./routes/channel'));
-// app.use("/api/v1/user", require('../routes/api/botuser'));
-// app.use("/api/v1/command", require('../routes/api/botcommands'));
 
 // Create an instance of model SomeModel
 // const cc = new Channel(
@@ -65,4 +65,4 @@ Channel.find().count(function (err, count) {
     else console.log("Count is", count)
 })
 
-app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`));
+app.listen(process.env.PORT, () => console.log(`*** Server Running on http://localhost:${process.env.PORT}`));
