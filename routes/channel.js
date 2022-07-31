@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const Channel = require("../models/channel");
+const { check, validationResult } = require("express-validator");
 
 // @route   Get /
 // @desc    Get an array of all the users
@@ -13,22 +14,55 @@ router.get("/", (req, res) => {
     })
     .catch((err) => {
       console.log(err);
-    })
+    });
 });
 
-router.get("/channel/:id/edit", (req, res) => {
+// @route   Post /
+// @desc    Create an new channel
+// @access  Public
+router.post("/channel", [
+  check("channel_id", "Channel ID field is required").notEmpty()
+], (req, res, next) => {
   try {
-    var id = req.params.chid; // channel id
-    Channel.find({ _id: id }, (err, channel, count) => {
-      if (err) throw err;
-      console.log(channel)
-    });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({ success: false, errors: errors.array() });
+    }
+
+    let nc = new Channel(
+      {
+        channel_id: req.body.channel_id,
+        enable: true,
+        emoji: "hanayu5Shebao",
+        regexes: [],
+        spam: []
+      }
+    );
+
+    for (let i = 0; i < req.body.regex.length; i++) { 
+      nc.regexes.push({
+        enable: req.body.regexEnable[i],
+        regex: req.body.regex[i],
+        response: req.body.response[i]
+      })
+    }
+
+    for (let i = 0; i < req.body.cycle.length; i++) { 
+      nc.spam.push({
+        enable: req.body.spamEnable[i],
+        cycle: req.body.cycle[i],
+        message: req.body.message[i]
+      })
+    }
+
+    nc.save();
+    return res.json({ success: true })
   } catch (error) {
     console.log(error);
   }
 });
 
-// @route   Delete /
+// @route   Delete /channel/:_id
 // @desc    Delete an record by record object id
 // @access  Public
 router.delete("/channel/:_id", (req, res) => {
@@ -42,7 +76,7 @@ router.delete("/channel/:_id", (req, res) => {
       .catch((err) => {
         console.log(err);
         res.status(404).json({ message: "Channel is not exist!" });
-      })
+      });
   }
 });
 

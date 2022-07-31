@@ -144,15 +144,33 @@ client.on("raided", (channel, username, viewers) => {
   sayFormatResponse(channel, response);
 });
 
+let queue = [];
 client.on(
   "subgift",
   (channel, username, streakMonths, recipient, methods, userstate) => {
-    console.log(`${recipient}`);
-    console.log(`${userstate}`);
+    let crt = Date().toLocaleString('zh-TW');
+    if(!queueCheck(username)) return;
+    console.log(`${JSON.stringify(userstate)}`);
     let response = `@${username} 感謝贈送訂閱 %emote_here% `;
     sayFormatResponse(channel, response);
   }
 );
+
+function queueCheck(username) {
+  queue.forEach(e => {
+    if(e[0] == username){
+      let ct = Date().toLocaleString('zh-TW');
+      let diff = (ct - e[1]) / (60 * 1_000);
+      e[1] = ct;
+      if (diff >= 1) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  });
+  return true;
+}
 
 client.on("subscription", (channel, username, method, message, userstate) => {
   let response = `@${username} 感謝訂閱 %emote_here% `;
