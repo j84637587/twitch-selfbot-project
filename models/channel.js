@@ -1,16 +1,27 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const commandSchema = new Schema({
-  command: String,
+const regexSchema = new Schema({
+  enable: {
+    type: Boolean,
+    default: false
+  },
+  regex: String,
+  regex_modifier: {
+    type: String,
+    default: "m"
+  },
   response: String,
 });
 
-const regexSchema = new Schema({
-  regex: String,
-  regex_modifier: String,
-  response: String,
-});
+const spamSchema = new Schema({
+  enable: {
+    type: Boolean,
+    default: false
+  },
+  cycle: Number,
+  message: String,
+})
 
 const channelSchema = new Schema({
   channel_id: {
@@ -27,22 +38,8 @@ const channelSchema = new Schema({
     required: true,
     default: "",
   },
-  commands: [ commandSchema ],
-  regexs: [ regexSchema ],
-  spam: {
-    enable: {
-      type: Boolean,
-      required: true,
-    },
-    cycle: {
-      type: Number,
-      required: true,
-    },
-    message: {
-      type: String,
-      required: true,
-    },
-  },
+  regexes: [ regexSchema ],
+  spam: [ spamSchema ],
 });
 
 module.exports = Channel = mongoose.model("channel", channelSchema);

@@ -22,7 +22,7 @@
                 <h2>Twitch self-bot</h2>
               </div>
               <div class="col-sm-6">
-                <a href="#addEmployeeModal" class="btn btn-success" data-toggle="modal">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#addModal" class="btn btn-success" data-toggle="modal">
                   <i class="bi bi-plus-lg" style="font-size: 1rem; vertical-align: middle"></i>
                   <span style="vertical-align: middle">Add New Channel</span>
                 </a>
@@ -33,10 +33,9 @@
             <thead>
               <tr>
                 <th scope="col">Channel id (<%= channels.length %>)</th>
-                <th scope="col">Command count</th>
                 <th scope="col">Regex count</th>
+                <th scope="col">Spam count</th>
                 <th scope="col">Status</th>
-                <th scope="col">Spam Status</th>
                 <th scope="col">Action</th>
               </tr>
             </thead>
@@ -44,8 +43,8 @@
               <% channels.forEach( function( channel ){ %>
               <tr>
                 <th scope="row"><%= channel.channel_id %></th>
-                <td><%= channel.regexs.length %></td>
-                <td><%= channel.commands.length %></td>
+                <td><%= channel.regexes.length %></td>
+                <td><%= channel.spam.length %></td>
                 <td>
                   <% if (channel.enable==true){%>
                   <i class="bi bi-check-circle text-success"></i>
@@ -54,15 +53,8 @@
                   <% } %>
                 </td>
                 <td>
-                  <% if (channel.spam.enable==true){%>
-                  <i class="bi bi-check-circle text-success"></i>
-                  <%}else{ %>
-                  <i class="bi bi-x-circle text-danger"></i>
-                  <% } %>
-                </td>
-                <td>
                   <a class="btn" href="#" role="button"><i class="bi bi-pencil-fill text-primary"></i></a>
-                  <a class="btn" href="#" role="button" data-bs-toggle="modal" data-bs-target="#comfrimModal" data-id="<%= channel.id %>"><i class="bi bi-trash text-danger"></i></a>
+                  <a class="btn" href="#" role="button" data-bs-toggle="modal" data-bs-target="#comfrimModal" data-id="<%= channel._id %>"><i class="bi bi-trash text-danger"></i></a>
                 </td>
               </tr>
               <% }); %>
@@ -72,7 +64,7 @@
       </div>
     </section>
   </main>
-  <!-- Modal -->
+  <!-- Comfrim Modal -->
   <div class="modal fade" id="comfrimModal" tabindex="-1" aria-labelledby="comfrimModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-confirm">
       <div class="modal-content">
@@ -96,10 +88,60 @@
             Cancel
           </button>
           <form id="deleteForm" method="POST">
-            <input type="hidden" name="_method" value="DELETE">
             <button type="submit" class="btn btn-danger">Delete</button>
           </form>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Modal -->
+  <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header flex-column">
+          <h4 class="modal-title">Add a new channel</h4>
+        </div>
+        <div class="modal-body">
+          <p id="addError" class="alert alert-danger" hidden></p>
+          <form id="addForm" method="POST">
+            <div class="form-group">
+              <label>Channel ID</label>
+              <input id="channel_id" name="channel_id" type="text" class="form-control" required>
+            </div>
+            <hr class="my-4">
+            <p>Regexes <button id="regexAdder" type="button" class="btn btn-sm btn-primary">Add</button></p>
+            <div id="passwordHelpBlock" class="form-text">
+              Avaliable Placeholder: %username%、%group-0% (0 represnet regex group index)
+            </div>
+            <div id="regexList" class="form-group">
+              <div id="regexContainer" class="input-group mb-3">
+                <button id="deleteregex" class="btn btn-danger" type="button">Remove</button>
+                <button id="switchBtn" class="btn btn-success" type="button">Enable</button>
+                <input id="switchValue" name="regexEnable[]" type="text" value='1' hidden>
+                <input name="regex[]" type="text" class="form-control" placeholder="Regex String">
+                <input name="response[]" type="text" class="form-control" placeholder="Response String">
+              </div>
+            </div>
+            <hr class="my-4">
+            <p>Spams <button id="spamAdder" type="button" class="btn btn-sm btn-primary">Add</button></p>
+            <div id="spamList" class="form-group">
+              <div id="spamContainer" class="input-group mb-3">
+                <button id="deletespam" class="btn btn-danger" type="button">Remove</button>
+                <button id="switchBtn" class="btn btn-success" type="button">Enable</button>
+                <input id="switchValue" name="spamEnable[]" type="text" value='1' hidden>
+                <input name="cycle[]" type="number" class="form-control" placeholder="Spam cycle">
+                <input name="message[]" type="text" class="form-control" placeholder="Message">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="reset" class="btn btn-warning">Reset</button>
+              <button type="submit" class="btn btn-success">Add</button>
+            </div>
+          </form>
+        </div>
+        <!-- <div class="modal-footer"></div> -->
       </div>
     </div>
   </div>
@@ -108,23 +150,83 @@
 </html>
 <script>
   $(function() {
-    // $('#deleteForm').on('submit', function(e) {
-    //   e.preventDefault();
-    // //   var id = $(this).find('#id').val();
-    //   $.ajax({
-    //     url: url, //this is the submit URL
-    //     type: 'DELETE', //or POST
-    //     data: $('#deleteForm').serialize(),
-    //     success: function(data) {
-    //       alert('successfully submitted')
-    //     }
-    //   });
-    // });
-
     $("#comfrimModal").on("show.bs.modal", function(event) {
       let button = $(event.relatedTarget);
       let id = button.data("id");
       $(this).find("#deleteForm").attr("action", `/channel/${id}?_method=DELETE`);
+    });
+
+    $("#regexAdder").click(function(e) {
+      e.preventDefault();
+      item = `<div id="regexContainer" class="input-group mb-3">
+                <button id="deleteregex" class="btn btn-danger" type="button">Remove</button>
+                <button id="switchBtn" class="btn btn-success" type="button">Enable</button>
+                <input id="switchValue" name="regexEnable[]" type="text" value='1' hidden>
+                <input name="regex[]" type="text" class="form-control" placeholder="Regex String">
+                <input name="response[]" type="text" class="form-control" placeholder="Response String">
+              </div>`;
+      $('#regexList').append(item);
+    });
+
+    $("#spamAdder").click(function(e) {
+      e.preventDefault();
+      item = `<div id="spamContainer" class="input-group mb-3">
+              <button id="deletespam" class="btn btn-danger" type="button">Remove</button>
+              <button id="switchBtn" class="btn btn-success" type="button">Enable</button>
+              <input id="switchValue" name="spamEnable[]" type="text" value='1' hidden>
+              <input name="cycle[]" type="number" class="form-control" placeholder="Spam cycle">
+              <input name="message[]" type="text" class="form-control" placeholder="Message">
+            </div>`;
+      $('#spamList').append(item);
+    });
+
+    $("body").on("click", "#deleteregex", function() {
+      $(this).parents("#regexContainer").remove();
+    })
+
+
+    $("body").on("click", "#deletespam", function() {
+      $(this).parents("#spamContainer").remove();
+    })
+
+    $("body").on("click", "#switchBtn", function() {
+      let input = $(this).parent("div").find("#switchValue");
+      if ($(input).val() == 1) {
+        $(input).val(0);
+        $(this).text("Disable").addClass('btn-danger').removeClass('btn-success');
+      } else {
+        $(input).val(1);
+        $(this).text("Enable").addClass('btn-success').removeClass('btn-danger');
+      }
+    });
+
+    $(document).on("submit", '#addForm', function(e) {
+      let form = $(this);
+      e.preventDefault();
+      $("#addError").attr("hidden", true);
+      $("#addError").text('');
+      $.ajax({
+        url: "/channel",
+        method: "post",
+        data: $(this).serialize(),
+        success: function(res) {
+          console.log(res);
+          if (res.success) {
+            location.reload();
+          } else {
+            $("#addError").attr("hidden", false);
+            let text = "";
+            console.log(res.errors)
+            res.errors.forEach(function(err) {
+              text += err.msg + "<br/>";
+            });
+            $("#addError").text(text);
+          }
+        },
+        error: function(xhr, status, error) {
+          alert('Error: ', error);
+        }
+      });
     });
   });
 </script>
