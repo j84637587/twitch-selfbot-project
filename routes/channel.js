@@ -39,7 +39,7 @@ router.post("/channel", [
       }
     );
 
-    for (let i = 0; i < req.body.regex.length; i++) { 
+    for (let i = 0; i < req.body.regex.length; i++) {
       nc.regexes.push({
         enable: req.body.regexEnable[i],
         regex: req.body.regex[i],
@@ -47,7 +47,7 @@ router.post("/channel", [
       })
     }
 
-    for (let i = 0; i < req.body.cycle.length; i++) { 
+    for (let i = 0; i < req.body.cycle.length; i++) {
       nc.spam.push({
         enable: req.body.spamEnable[i],
         cycle: req.body.cycle[i],
@@ -78,6 +78,48 @@ router.delete("/channel/:_id", (req, res) => {
         res.status(404).json({ message: "Channel is not exist!" });
       });
   }
+});
+
+let gift_queue = [];
+
+class GiftTask {
+  constructor() {
+    this.last_count = 1;
+    this.count = 1;
+  }
+
+  add() {
+    this.count++;
+  }
+
+  check() {
+    if (this.last_count == this.count) {
+      return true;
+    }
+    this.last_count = this.count;
+    return false
+  }
+}
+
+// for gift manually test
+router.get("/test", (req, res) => {
+  let c = "a";
+  if (gift_queue[c] === undefined) {
+    gift_queue[c] = new GiftTask();
+    let timer = setInterval(function () {
+      if (gift_queue[c].check()) {
+        clearInterval(timer);
+        gift_queue[c] = undefined;
+        console.log("stop")
+      }else{
+        console.log("continue")
+      }
+    }, 3 * 1_000);
+  } else {
+    gift_queue[c].add();
+  }
+  console.log(gift_queue[c].count);
+  res.json({ count: gift_queue[c].count });
 });
 
 module.exports = router;

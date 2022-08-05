@@ -23,10 +23,6 @@ const client = new tmi.Client({
   channels: channel_ids,
 });
 
-// app.use(express.static("public"));
-// server.listen(4444); // port 4444
-
-
 client.on("connected", (adress, port) => {
   console.log(`\u001b[32m${getCurrentTimeString()} self-bot 啟動!\u001b[0m`);
 
@@ -117,7 +113,7 @@ module.exports.matchMessage = function (channel, message, un) {
     // make response
     let response = channels[channel]["extra"][e]["response"];
     // console.log(">", channel, channels[channel], channels[channel]["extra"], channels[channel]["extra"][e])
-    if(index == 0)
+    if (index == 0)
       response = this.replaceUsername(response, un);
     else
       response = this.replaceUsername(response, match[index]);
@@ -129,8 +125,18 @@ module.exports.matchMessage = function (channel, message, un) {
 
 client.on("cheer", (channel, userstate, message) => {
   let bits_count = ~~userstate["bits"];
-  console.log(`\u001b[33m${getCurrentTimeString()}  ${userstate["display-name"]} cheer with ${bits_count} bits. \u001b[0m`); // print bits amount
+  console.log(`\u001b[33m${getCurrentTimeString()} ${userstate["display-name"]} cheer with ${bits_count} bits. \u001b[0m`); // print bits amount
   let response = `@${userstate["display-name"]} 感謝小奇點 %emote_here% `;
+  console.log(channel, channel.substring(1), message)
+  if (channel.substring(1) == "hana_yuuka") {
+    setTimeout(function () {
+      if (message.includes("加班")) {
+        client.say(channel, `優花加班 ${int(bits_count) / 20} 分鐘`);
+      } else if (message.includes("減班")) {
+        client.say(channel, `優花減班 ${int(bits_count) / 20} 分鐘`);
+      }
+    }, 1 * 1_000);
+  }
 
   // add extra message when reach specific amount of bits
   if (bits_count >= 500) {
@@ -144,33 +150,51 @@ client.on("raided", (channel, username, viewers) => {
   sayFormatResponse(channel, response);
 });
 
-let queue = [];
+let gift_queue = [];
+
+class GiftTask {
+  constructor() {
+    this.last_count = 1;
+    this.count = 1;
+  }
+
+  add() {
+    this.count++;
+  }
+
+  check() {
+    if (this.last_count == this.count) {
+      return true;
+    }
+    this.last_count = this.count;
+    return false
+  }
+}
+
 client.on(
   "subgift",
   (channel, username, streakMonths, recipient, methods, userstate) => {
-    let crt = Date().toLocaleString('zh-TW');
-    if(!queueCheck(username)) return;
-    console.log(`${JSON.stringify(userstate)}`);
-    let response = `@${username} 感謝贈送訂閱 %emote_here% `;
-    sayFormatResponse(channel, response);
+    if (gift_queue[channel] === undefined) {
+      gift_queue[channel] = new GiftTask();
+      let timer = setInterval(function () {
+        // check if there are more gift
+        if (gift_queue[channel].check()) {
+          clearInterval(timer);
+          let response = `@${username} 感謝贈送訂閱 %emote_here% `;
+          // stop counting and send response
+          sayFormatResponse(channel, response);
+          gift_queue[channel] = undefined;
+          console.log(`${channel}, ${username} stop`)
+        } else {
+          console.log(`${channel}, ${username} continue`)
+        }
+      }, 3 * 1_000);
+    } else {
+      gift_queue[channel].add();
+    }
   }
 );
 
-function queueCheck(username) {
-  queue.forEach(e => {
-    if(e[0] == username){
-      let ct = Date().toLocaleString('zh-TW');
-      let diff = (ct - e[1]) / (60 * 1_000);
-      e[1] = ct;
-      if (diff >= 1) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  });
-  return true;
-}
 
 client.on("subscription", (channel, username, method, message, userstate) => {
   let response = `@${username} 感謝訂閱 %emote_here% `;
@@ -214,13 +238,14 @@ function sayFormatResponse(channel, response) {
  * @returns 
  */
 module.exports.replaceUsername = function (response, username) {
-  // if tag username is bot self, remove tag.
-  // if (config.get("USERNAME") == username) {
-  //   return response.replace("@%username%", "");
-  // }
   return response.replace("%username%", username);
 }
 
+/**
+ * Get local datetime string
+ * 
+ * @returns {string} Local time string
+ */
 function getCurrentTimeString() {
   today = new Date().toLocaleString('zh-TW');
   return `[ ${today} ] `;
